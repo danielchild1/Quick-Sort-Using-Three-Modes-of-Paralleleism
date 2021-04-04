@@ -5,11 +5,9 @@
 
 #include <iostream>
 #include <immintrin.h>
-#include <vector>
 
-using std::vector;
 
-void selectionSort(vector<int> &newArr) {
+void selectionSort(int* newArr) {
 	int tempStorage, iterator;
 
 	for (int i = 0; i < 15; i++) {
@@ -30,36 +28,26 @@ void selectionSort(vector<int> &newArr) {
 }
 
 //65536
-vector<vector<int>> initializer() {
+__m512i m512_generator(int* a) {
 	const int maxIntValue = 4294967296;
+	int max = 10000000;
+
 	default_random_engine generator;
 	uniform_int_distribution<int> distrobution(0, maxIntValue);
 
-	vector<int> first;
-	vector<vector<int>> allOfThem;
-
-	for (int i = 0; i < 4; i++) {
-		allOfThem.push_back(first);
+	__m512i first = _mm512_load_si512(&a[0]); // Go get the first vector
+	for (int i = 16; i < max; i += 16) {
+		__m512i second = _mm512_load_si512(&a[i]); // Get the next vector
+		first = _mm512_max_epi32(first, second);
 	}
 
-	for (int i = 0; i < 4; i++) {
-		for (int t = 0; t < 16; t++) {
-			allOfThem[i].push_back(distrobution(generator));
-		}
-	}
-
-	for (vector<int> val : allOfThem) {
-		selectionSort(val);
-	}
+	
 
 	return allOfThem;
 }
 
 
 
-__m512i vectorTOmm512i(vector<int> x) {
-	return _mm512_set_epi32(x[15], x[14], x[13], x[12], x[11], x[10], x[9], x[8], x[7], x[6], x[5], x[4], x[3], x[2], x[1], x[0]);
-}
 
 
 void bitonicSort(const __m512 Aa, const __m512 Ab, const __m512 Ba, const __m512 Bb, const __m512 Ca, const __m512 Cb, const __m512 Da, const __m512 Db,
