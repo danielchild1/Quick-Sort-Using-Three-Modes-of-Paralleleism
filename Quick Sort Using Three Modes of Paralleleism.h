@@ -43,14 +43,14 @@ __m512i m512_generator(int* a) {
 
 	
 
-	return allOfThem;
+	return first;
 }
 
 
 
 
 
-void bitonicSort(const __m512 Aa, const __m512 Ab, const __m512 Ba, const __m512 Bb, const __m512 Ca, const __m512 Cb, const __m512 Da, const __m512 Db,
+void bitonicSort(const __m512& Aa, const __m512& Ab, const __m512& Ba, const __m512& Bb, const __m512& Ca, const __m512& Cb, const __m512& Da, const __m512& Db,
 	__m512& Aouta, __m512& Aoutb, __m512& Bouta, __m512& Boutb, __m512& Couta, __m512& Coutb, __m512& Douta, __m512& Doutb) {
 
 	//revers B
@@ -169,4 +169,46 @@ void bitonicSort(const __m512 Aa, const __m512 Ab, const __m512 Ba, const __m512
 	Coutb = _mm512_permutex2var_ps(L3, _mm512_set_epi32(31, 15, 30, 14, 29, 13, 28, 12, 27, 11, 26, 10, 25, 9, 24, 8), H3);
 	Doutb = _mm512_permutex2var_ps(L4, _mm512_set_epi32(31, 15, 30, 14, 29, 13, 28, 12, 27, 11, 26, 10, 25, 9, 24, 8), H4);
 
+}
+
+
+void printVectorInt(__m512i v, string name)
+{
+#if defined (__GNUC__)
+	int* temp = (int*)aligned_alloc(64, sizeof(int) * 16);
+#elif defined (_MSC_VER)
+	int* temp = (int*)_aligned_malloc(sizeof(int) * 16, 64);
+#endif
+	_mm512_store_si512(temp, v);
+	printf("The vector called %s contains: ", name.c_str());
+	for (int i = 0; i < 16; i++)
+	{
+		printf("%02d ", temp[i]);
+	}
+	printf("\n");
+#if defined (__GNUC__)
+	free(temp);
+#elif defined (_MSC_VER)
+	_aligned_free(temp);
+#endif
+}
+void printVectorFloat(__m512 v, string name)
+{
+#if defined (__GNUC__)
+	float* temp = (float*)aligned_alloc(64, sizeof(float) * 16);
+#elif defined (_MSC_VER)
+	float* temp = (float*)_aligned_malloc(sizeof(float) * 16, 64);
+#endif
+	_mm512_store_ps(temp, v);
+	printf("The vector called %s contains: ", name.c_str());
+	for (int i = 0; i < 16; i++)
+	{
+		printf("%3f ", temp[i]);
+	}
+	printf("\n");
+#if defined (__GNUC__)
+	free(temp);
+#elif defined (_MSC_VER)
+	_aligned_free(temp);
+#endif
 }
