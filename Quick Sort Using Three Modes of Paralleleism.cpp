@@ -3,8 +3,6 @@
 
 #include "Quick Sort Using Three Modes of Paralleleism.h"
 #include <immintrin.h>
-#include <random>
-#include <vector>
 #include <unistd.h>
 #include <cstdlib>
 #include <omp.h>
@@ -16,6 +14,9 @@ using namespace std;
 int main()
 {
 	int* megaArray[N];
+	fillArray(*megaArray);
+
+
 
 	// openMP thread dynamic scheduler with for loop {
 	#pragma omp parallel for schedual(dynamic) num_threads(64)
@@ -23,14 +24,19 @@ int main()
 		printf("Thread %d is ready to work within range [%d, %d).\n", omp_get_thread_num(), i, (i + 65536));
 
 
-		int startIndex; // determine the start index of this block of 65536 elements
-		int endIndex; // determine the end index of this block of 65536 elements
+		int startIndex = i; // determine the start index of this block of 65536 elements
+		int endIndex = (i + 65536); // determine the end index of this block of 65536 elements
+
+		selectionSort(*megaArray, startIndex);
 
 		int sortedBlockSize = 16;
 		int edingSortedBlockSize = 16384;
 
 		__m512 Aa, Ab, Ba, Bb, Ca, Cb, Da, Db;
 		__m512 Aouta, Aoutb, Bouta, Boutb, Couta, Coutb, Douta, Doutb;
+
+		int* inputPointer;
+		int* outputPointer;
 
 		while (sortedBlockSize <= edingSortedBlockSize) {
 			//sortedBlockSize starts at 16 and is doubled every while loop iteration until it reaches 16384

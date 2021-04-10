@@ -5,6 +5,8 @@
 
 #include <iostream>
 #include <immintrin.h>
+#include <random>
+#define N 33'554'432 // 2^25
 
 
 void selectionSort(int* newArr) {
@@ -19,6 +21,26 @@ void selectionSort(int* newArr) {
 
 		}
 		
+		//swap values
+		tempStorage = newArr[iterator];
+		newArr[iterator] = newArr[i];
+		newArr[i] = tempStorage;
+
+	}
+}
+
+void selectionSort(int* newArr, int startIndex) {
+	int tempStorage, iterator;
+
+	for (int i = startIndex; i < 15 + startIndex; i++) {
+		iterator = i;
+		for (int j = i + 1; j < 16; j++) {
+			if (newArr[j] < newArr[iterator]) {
+				iterator = j;
+			}
+
+		}
+
 		//swap values
 		tempStorage = newArr[iterator];
 		newArr[iterator] = newArr[i];
@@ -47,7 +69,29 @@ __m512i m512_generator(int* a) {
 }
 
 
+void fillArray(int* big) {
+	//-2,147,483,647
+	//2147483647
 
+	default_random_engine generator;
+	uniform_int_distribution<int> distribution(-2147483647, 2147483647);
+
+	for (unsigned int i = 0; i < N; i++) {
+		big[i] = distribution(generator);
+	}
+}
+
+void fillArray(float* big) {
+	//-2147483647
+	//2147483647
+
+	default_random_engine generator;
+	uniform_int_distribution<int> distribution(-2147483647, 2147483647);
+
+	for (unsigned int i = 0; i < N; i++) {
+		big[i] = distribution(generator);
+	}
+}
 
 
 void bitonicSort(const __m512& Aa, const __m512& Ab, const __m512& Ba, const __m512& Bb, const __m512& Ca, const __m512& Cb, const __m512& Da, const __m512& Db,
