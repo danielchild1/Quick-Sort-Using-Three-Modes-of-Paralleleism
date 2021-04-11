@@ -14,12 +14,14 @@ using namespace std;
 int main()
 {
 	int* megaArray[N];
+	int* megaOut[N];
+
 	fillArray(*megaArray);
 
 
 
 	// openMP thread dynamic scheduler with for loop {
-	#pragma omp parallel for schedual(dynamic) num_threads(64)
+	//#pragma omp parallel for schedual(dynamic) num_threads(64)
 	for (unsigned int i = 0; i < N; i+= 65536) {
 		printf("Thread %d is ready to work within range [%d, %d).\n", omp_get_thread_num(), i, (i + 65536));
 
@@ -27,16 +29,19 @@ int main()
 		int startIndex = i; // determine the start index of this block of 65536 elements
 		int endIndex = (i + 65536); // determine the end index of this block of 65536 elements
 
-		selectionSort(*megaArray, startIndex);
+		for (int sort = startIndex; sort < endIndex; sort += 16) {
+			selectionSort(*megaArray, sort);
+		}
+		
 
 		int sortedBlockSize = 16;
 		int edingSortedBlockSize = 16384;
 
-		__m512 Aa, Ab, Ba, Bb, Ca, Cb, Da, Db;
-		__m512 Aouta, Aoutb, Bouta, Boutb, Couta, Coutb, Douta, Doutb;
+		__m512i Aa, Ab, Ba, Bb, Ca, Cb, Da, Db;
+		__m512i Aouta, Aoutb, Bouta, Boutb, Couta, Coutb, Douta, Doutb;
 
-		int* inputPointer;
-		int* outputPointer;
+		int* inputPointer = *megaArray;
+		int* outputPointer = *megaOut;
 
 		while (sortedBlockSize <= edingSortedBlockSize) {
 			//sortedBlockSize starts at 16 and is doubled every while loop iteration until it reaches 16384
@@ -62,14 +67,15 @@ int main()
 				int endD1 = arrIndex + (7 * sortedBlockSize);
 				int endD2 = arrIndex + (8 * sortedBlockSize);
 
-				Aa = _mm512_loadu_ps(&megaArray[startA1]);
-				Ab = _mm512_loadu_ps(&megaArray[startA2]);
-				Ba = _mm512_loadu_ps(&megaArray[startB1]);
-				Bb = _mm512_loadu_ps(&megaArray[startB2]);
-				Ca = _mm512_loadu_ps(&megaArray[startC1]);
-				Cb = _mm512_loadu_ps(&megaArray[startC2]);
-				Da = _mm512_loadu_ps(&megaArray[startD1]);
-				Db = _mm512_loadu_ps(&megaArray[startD2]);
+				Aa = _mm512_loadu_epi32(&outputPointer[startA1]);
+				Ab = _mm512_loadu_epi32(&outputPointer[startA2]);
+				Ba = _mm512_loadu_epi32(&outputPointer[startB1]);
+				Bb = _mm512_loadu_epi32(&outputPointer[startB2]);
+				Ca = _mm512_loadu_epi32(&outputPointer[startC1]);
+				Cb = _mm512_loadu_epi32(&outputPointer[startC2]);
+				Da = _mm512_loadu_epi32(&outputPointer[startD1]);
+				Db = _mm512_loadu_epi32(&outputPointer[startD2]);
+				
 
 				int writeA = startA1;
 				int writeB = startB1;
@@ -80,102 +86,108 @@ int main()
 					
 					bitonicSort(Aa, Ab, Ba, Bb, Ca, Cb, Da, Db, Aouta, Aoutb, Bouta, Boutb, Couta, Coutb, Douta, Doutb);
 
-					_mm512_storeu_ps(&megaArray[writeA], Aouta);
-					_mm512_storeu_ps(&megaArray[writeB], Bouta);
-					_mm512_storeu_ps(&megaArray[writeC], Couta);
-					_mm512_storeu_ps(&megaArray[writeD], Douta);
+					_mm512_storeu_epi32(&outputPointer[writeA], Aouta);
+					_mm512_storeu_epi32(&outputPointer[writeB], Bouta);
+					_mm512_storeu_epi32(&outputPointer[writeC], Couta);
+					_mm512_storeu_epi32(&outputPointer[writeD], Douta);
 
 					
-					writeA += sortedBlockSize;
-					writeB += sortedBlockSize;
-					writeC += sortedBlockSize;
-					writeD += sortedBlockSize;
+					writeA += 16;
+					writeB += 16;
+					writeC += 16;
+					writeD += 16;
+
+					Aa = Aoutb;
 
 					if (j == (sortedBlockSize / 8) - 2) {
-
+						_mm512_storeu_epi32(&outputPointer[writeA], Aoutb);
+						_mm512_storeu_epi32(&outputPointer[writeB], Boutb);
+						_mm512_storeu_epi32(&outputPointer[writeC], Coutb);
+						_mm512_storeu_epi32(&outputPointer[writeD], Doutb);
 					}
 					else { //A
 						if (startA1 == endA1) {
-
+							Ab = _mm512_loadu_epi32(&inputPointer[startA2]);
 							startA2 += 16;
 						}
 						else if (startA2 == endA2) {
-
+							Ab = _mm512_loadu_epi32(&inputPointer[startA1]);
 							startA1 += 16;
 						}
-						else if (startA1 < startA2) {
-
+						else if (outputPointer[startA1+16] < outputPointer[startA2+16]) {
+							Ab = _mm512_loadu_epi32(&inputPointer[startA1]);
 							startA1 += 16;
 						}
 						else {
-
+							Ab = _mm512_loadu_epi32(&inputPointer[startA2]);
 							startA2 += 16;
 						}
 						//B
 						if (startB1 == endB1) {
-
+							Bb = _mm512_loadu_epi32(&inputPointer[startB2]);
 							startB2 += 16;
 						}
 						else if (startB2 == endB2) {
-
+							Bb = _mm512_loadu_epi32(&inputPointer[startB1]);
 							startB1 += 16;
 						}
-						else if (startB1 < startB2) {
-
+						else if (outputPointer[startB1 + 16] < outputPointer[startB2 + 16]) {
+							Bb = _mm512_loadu_epi32(&inputPointer[startB1]);
 							startB1 += 16;
 						}
 						else {
-
+							Bb = _mm512_loadu_epi32(&inputPointer[startB2]);
 							startB2 += 16;
 						}
 						//C
 						if (startC1 == endC1) {
-
+							Cb = _mm512_loadu_epi32(&inputPointer[startC2]);
 							startC2 += 16;
 						}
 						else if (startC2 == endC2) {
-
+							Cb = _mm512_loadu_epi32(&inputPointer[startC1]);
 							startC1 += 16;
 						}
-						else if (startC1 < startC2) {
-
+						else if (outputPointer[startC1 + 16] < outputPointer[startC2 + 16]) {
+							Cb = _mm512_loadu_epi32(&inputPointer[startC1]);
 							startC1 += 16;
 						}
 						else {
-
+							Cb = _mm512_loadu_epi32(&inputPointer[startC2]);
 							startC2 += 16;
 						}
 						//D
 						if (startD1 == endD1) {
-
+							Db = _mm512_loadu_epi32(&inputPointer[startD2]);
 							startD2 += 16;
 						}
 						else if (startD2 == endD2) {
-
+							Db = _mm512_loadu_epi32(&inputPointer[startD1]);
 							startD1 += 16;
 						}
-						else if (startD1 < startD2) {
-
+						else if (outputPointer[startD1 + 16] < outputPointer[startD2 + 16]) {
+							Db = _mm512_loadu_epi32(&inputPointer[startD1]);
 							startD1 += 16;
 						}
 						else {
-
+							Db = _mm512_loadu_epi32(&inputPointer[startD2]);
 							startD2 += 16;
 						}
 					}
 				}
+				int* temp = outputPointer;
+				outputPointer = inputPointer;
+				inputPointer = temp;
+
 				sortedBlockSize *= 2;
 				//exchange input and output pointers, 
+
 			}
 			//deallocate output array
-		
+			delete[] outputPointer;
+			delete[] inputPointer;
 		}// End OpenMP for loop
 	}
 
 	return 0;
 }
-
-
-
-//return 0;
-//}
