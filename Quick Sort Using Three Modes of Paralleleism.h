@@ -50,23 +50,23 @@ void selectionSort(float* newArr, int startIndex) {
 }
 
 //65536
-__m512i m512_generator(int* a) {
-	const int maxIntValue = 4294967296;
-	int max = 10000000;
+// __m512i m512_generator(int* a) {
+// 	const int maxIntValue = 4294967296;
+// 	int max = 10000000;
 
-	std::default_random_engine generator;
-	std::uniform_int_distribution<int> distrobution(0, maxIntValue);
+// 	std::default_random_engine generator;
+// 	std::uniform_int_distribution<int> distrobution(0, maxIntValue);
 
-	__m512i first = _mm512_load_si512(&a[0]); // Go get the first vector
-	for (int i = 16; i < max; i += 16) {
-		__m512i second = _mm512_load_si512(&a[i]); // Get the next vector
-		first = _mm512_max_epi32(first, second);
-	}
+// 	__m512i first = _mm512_load_si512(&a[0]); // Go get the first vector
+// 	for (int i = 16; i < max; i += 16) {
+// 		__m512i second = _mm512_load_si512(&a[i]); // Get the next vector
+// 		first = _mm512_max_epi32(first, second);
+// 	}
 
 	
 
-	return first;
-}
+// 	return first;
+// }
 
 
 void fillArray(int* big) {
@@ -215,43 +215,43 @@ void bitonicSort(const __m512& Aa, const __m512& Ab, const __m512& Ba, const __m
 }
 
 
-void printVectorInt(__m512i v, string name)
-{
-#if defined (__GNUC__)
-	int* temp = (int*)aligned_alloc(64, sizeof(int) * 16);
-#elif defined (_MSC_VER)
-	int* temp = (int*)_aligned_malloc(sizeof(int) * 16, 64);
-#endif
-	_mm512_store_si512(temp, v);
-	printf("The vector called %s contains: ", name.c_str());
-	for (int i = 0; i < 16; i++)
-	{
-		printf("%02d ", temp[i]);
-	}
-	printf("\n");
-#if defined (__GNUC__)
-	free(temp);
-#elif defined (_MSC_VER)
-	_aligned_free(temp);
-#endif
-}
-void printVectorFloat(__m512 v, string name)
-{
-#if defined (__GNUC__)
-	float* temp = (float*)aligned_alloc(64, sizeof(float) * 16);
-#elif defined (_MSC_VER)
-	float* temp = (float*)_aligned_malloc(sizeof(float) * 16, 64);
-#endif
-	_mm512_store_ps(temp, v);
-	printf("The vector called %s contains: ", name.c_str());
-	for (int i = 0; i < 16; i++)
-	{
-		printf("%3f ", temp[i]);
-	}
-	printf("\n");
-#if defined (__GNUC__)
-	free(temp);
-#elif defined (_MSC_VER)
-	_aligned_free(temp);
-#endif
-}
+// void printVectorInt(__m512i v, string name)
+// {
+// #if defined (__GNUC__)
+// 	int* temp = (int*)aligned_alloc(64, sizeof(int) * 16);
+// #elif defined (_MSC_VER)
+// 	int* temp = (int*)_aligned_malloc(sizeof(int) * 16, 64);
+// #endif
+// 	_mm512_store_si512(temp, v);
+// 	printf("The vector called %s contains: ", name.c_str());
+// 	for (int i = 0; i < 16; i++)
+// 	{
+// 		printf("%02d ", temp[i]);
+// 	}
+// 	printf("\n");
+// #if defined (__GNUC__)
+// 	free(temp);
+// #elif defined (_MSC_VER)
+// 	_aligned_free(temp);
+// #endif
+// }
+// void printVectorFloat(__m512 v, string name)
+// {
+// #if defined (__GNUC__)
+// 	float* temp = (float*)aligned_alloc(64, sizeof(float) * 16);
+// #elif defined (_MSC_VER)
+// 	float* temp = (float*)_aligned_malloc(sizeof(float) * 16, 64);
+// #endif
+// 	_mm512_store_ps(temp, v);
+// 	printf("The vector called %s contains: ", name.c_str());
+// 	for (int i = 0; i < 16; i++)
+// 	{
+// 		printf("%3f ", temp[i]);
+// 	}
+// 	printf("\n");
+// #if defined (__GNUC__)
+// 	free(temp);
+// #elif defined (_MSC_VER)
+// 	_aligned_free(temp);
+// #endif
+// }

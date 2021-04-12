@@ -18,12 +18,12 @@ int main()
 
 	fillArray(*megaArray);
 
-
+	printf("Its running");
 
 	// openMP thread dynamic scheduler with for loop {
 	//#pragma omp parallel for schedual(dynamic) num_threads(64)
 	for (unsigned int i = 0; i < N; i+= 65536) {
-		printf("Thread %d is ready to work within range [%d, %d).\n", omp_get_thread_num(), i, (i + 65536));
+		//printf("Thread %d is ready to work within range [%d, %d).\n", omp_get_thread_num(), i, (i + 65536));
 
 
 		int startIndex = i; // determine the start index of this block of 65536 elements
@@ -51,11 +51,11 @@ int main()
 				int startA1 = arrIndex;
 				int startA2 = arrIndex + sortedBlockSize +1;
 				int startB1 = arrIndex + (2 * sortedBlockSize) +1;
-				int startB2 = arrIndex + (3 * sortedBlockSize) + 1;;
-				int startC1 = arrIndex + (4 * sortedBlockSize) + 1;;
-				int startC2 = arrIndex + (5 * sortedBlockSize) + 1;;
-				int startD1 = arrIndex + (6 * sortedBlockSize) + 1;;
-				int startD2 = arrIndex + (7 * sortedBlockSize) + 1;;
+				int startB2 = arrIndex + (3 * sortedBlockSize) + 1;
+				int startC1 = arrIndex + (4 * sortedBlockSize) + 1;
+				int startC2 = arrIndex + (5 * sortedBlockSize) + 1;
+				int startD1 = arrIndex + (6 * sortedBlockSize) + 1;
+				int startD2 = arrIndex + (7 * sortedBlockSize) + 1;
 
 
 				int endA1 = arrIndex + sortedBlockSize;
@@ -123,7 +123,7 @@ int main()
 							startA1 += 16;
 						}
 						else {
-							Ab = _mm512_loadu_ps(&inputPointer[startA2]);
+							Ab = _mm512_loadu_epi32(&inputPointer[startA2]);
 							startA2 += 16;
 						}
 						//B
