@@ -67,14 +67,14 @@ int main()
 				int endD1 = arrIndex + (7 * sortedBlockSize);
 				int endD2 = arrIndex + (8 * sortedBlockSize);
 
-				Aa = _mm512_load_epi32(&outputPointer[startA1]);
-				Ab = _mm512_load_epi32(&outputPointer[startA2]);
-				Ba = _mm512_load_epi32(&outputPointer[startB1]);
-				Bb = _mm512_load_epi32(&outputPointer[startB2]);
-				Ca = _mm512_load_epi32(&outputPointer[startC1]);
-				Cb = _mm512_load_epi32(&outputPointer[startC2]);
-				Da = _mm512_load_epi32(&outputPointer[startD1]);
-				Db = _mm512_load_epi32(&outputPointer[startD2]);
+				Aa = _mm512_load_epi32(&inputPointer[startA1]);
+				Ab = _mm512_load_epi32(&inputPointer[startA2]);
+				Ba = _mm512_load_epi32(&inputPointer[startB1]);
+				Bb = _mm512_load_epi32(&inputPointer[startB2]);
+				Ca = _mm512_load_epi32(&inputPointer[startC1]);
+				Cb = _mm512_load_epi32(&inputPointer[startC2]);
+				Da = _mm512_load_epi32(&inputPointer[startD1]);
+				Db = _mm512_load_epi32(&inputPointer[startD2]);
 				
 
 				int writeA = startA1;
@@ -187,6 +187,11 @@ int main()
 			delete[] outputPointer;
 			delete[] inputPointer;
 		}// End OpenMP for loop
+	}
+
+	
+	for(int x = 0; x < 150; x++){
+		printf("%d\n", megaOut[x]);
 	}
 
 	return 0;
