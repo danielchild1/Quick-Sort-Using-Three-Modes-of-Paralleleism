@@ -81,15 +81,14 @@ void fillArray(int* big) {
 	}
 }
 
-void fillArray(float* big) {
-	//-2147483647
-	//2147483647
+
+void fillArray(float* big) {//overrides incase I switch to floats
 
 	std::default_random_engine generator;
 	std::uniform_int_distribution<int> distribution(-2147483647, 2147483647);
 
 	for (unsigned int i = 0; i < N; i++) {
-		big[i] = distribution(generator);
+		big[i] = (float)distribution(generator);
 	}
 }
 
