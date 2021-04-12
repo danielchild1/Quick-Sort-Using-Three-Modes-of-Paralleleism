@@ -13,10 +13,10 @@ using namespace std;
 
 int main()
 {
-	float* megaArray[N];
-	float* megaOut[N];
+	float* megaArray = new float[N];
+	float* megaOut = new float[N];
 
-	fillArray(*megaArray);
+	fillArray(megaArray);
 
 	printf("Its running");
 
@@ -30,7 +30,7 @@ int main()
 		int endIndex = (i + 65536); // determine the end index of this block of 65536 elements
 
 		for (int sort = startIndex; sort < endIndex; sort += 16) {
-			selectionSort(*megaArray, sort);
+			selectionSort(megaArray, sort);
 		}
 		
 
@@ -40,8 +40,8 @@ int main()
 		__m512 Aa, Ab, Ba, Bb, Ca, Cb, Da, Db;
 		__m512 Aouta, Aoutb, Bouta, Boutb, Couta, Coutb, Douta, Doutb;
 
-		float* inputPointer = *megaArray;
-		float* outputPointer = *megaOut;
+		float* inputPointer = megaArray;
+		float* outputPointer = megaOut;
 
 		while (sortedBlockSize <= edingSortedBlockSize) {
 			//sortedBlockSize starts at 16 and is doubled every while loop iteration until it reaches 16384
@@ -123,7 +123,7 @@ int main()
 							startA1 += 16;
 						}
 						else {
-							Ab = _mm512_loadu_epi32(&inputPointer[startA2]);
+							Ab = _mm512_loadu_ps(&inputPointer[startA2]);
 							startA2 += 16;
 						}
 						//B
@@ -195,7 +195,7 @@ int main()
 
 	
 	for(int x = 0; x < 150; x++){
-		printf("%d\n", megaOut[x]);
+		printf("%.0f\n", megaOut[x]);
 	}
 
 	return 0;
