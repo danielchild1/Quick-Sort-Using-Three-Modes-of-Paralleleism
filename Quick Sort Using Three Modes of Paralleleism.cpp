@@ -13,8 +13,8 @@ using namespace std;
 
 int main()
 {
-	int* megaArray[N];
-	int* megaOut[N];
+	float* megaArray[N];
+	float* megaOut[N];
 
 	fillArray(*megaArray);
 
@@ -37,11 +37,11 @@ int main()
 		int sortedBlockSize = 16;
 		int edingSortedBlockSize = 16384;
 
-		__m512i Aa, Ab, Ba, Bb, Ca, Cb, Da, Db;
-		__m512i Aouta, Aoutb, Bouta, Boutb, Couta, Coutb, Douta, Doutb;
+		__m512 Aa, Ab, Ba, Bb, Ca, Cb, Da, Db;
+		__m512 Aouta, Aoutb, Bouta, Boutb, Couta, Coutb, Douta, Doutb;
 
-		int* inputPointer = *megaArray;
-		int* outputPointer = *megaOut;
+		float* inputPointer = *megaArray;
+		float* outputPointer = *megaOut;
 
 		while (sortedBlockSize <= edingSortedBlockSize) {
 			//sortedBlockSize starts at 16 and is doubled every while loop iteration until it reaches 16384
@@ -67,14 +67,14 @@ int main()
 				int endD1 = arrIndex + (7 * sortedBlockSize);
 				int endD2 = arrIndex + (8 * sortedBlockSize);
 
-				Aa = _mm512_loadu_epi32(&outputPointer[startA1]);
-				Ab = _mm512_loadu_epi32(&outputPointer[startA2]);
-				Ba = _mm512_loadu_epi32(&outputPointer[startB1]);
-				Bb = _mm512_loadu_epi32(&outputPointer[startB2]);
-				Ca = _mm512_loadu_epi32(&outputPointer[startC1]);
-				Cb = _mm512_loadu_epi32(&outputPointer[startC2]);
-				Da = _mm512_loadu_epi32(&outputPointer[startD1]);
-				Db = _mm512_loadu_epi32(&outputPointer[startD2]);
+				Aa = _mm512_loadu_ps(&outputPointer[startA1]);
+				Ab = _mm512_loadu_ps(&outputPointer[startA2]);
+				Ba = _mm512_loadu_ps(&outputPointer[startB1]);
+				Bb = _mm512_loadu_ps(&outputPointer[startB2]);
+				Ca = _mm512_loadu_ps(&outputPointer[startC1]);
+				Cb = _mm512_loadu_ps(&outputPointer[startC2]);
+				Da = _mm512_loadu_ps(&outputPointer[startD1]);
+				Db = _mm512_loadu_ps(&outputPointer[startD2]);
 				
 
 				int writeA = startA1;
@@ -86,10 +86,10 @@ int main()
 					
 					bitonicSort(Aa, Ab, Ba, Bb, Ca, Cb, Da, Db, Aouta, Aoutb, Bouta, Boutb, Couta, Coutb, Douta, Doutb);
 
-					_mm512_storeu_epi32(&outputPointer[writeA], Aouta);
-					_mm512_storeu_epi32(&outputPointer[writeB], Bouta);
-					_mm512_storeu_epi32(&outputPointer[writeC], Couta);
-					_mm512_storeu_epi32(&outputPointer[writeD], Douta);
+					_mm512_storeu_ps(&outputPointer[writeA], Aouta);
+					_mm512_storeu_ps(&outputPointer[writeB], Bouta);
+					_mm512_storeu_ps(&outputPointer[writeC], Couta);
+					_mm512_storeu_ps(&outputPointer[writeD], Douta);
 
 					
 					writeA += 16;
@@ -98,84 +98,88 @@ int main()
 					writeD += 16;
 
 					Aa = Aoutb;
+					Ba = Boutb;
+					Ca = Coutb;
+					Da = Doutb;
+
 
 					if (j == (sortedBlockSize / 8) - 2) {
-						_mm512_storeu_epi32(&outputPointer[writeA], Aoutb);
-						_mm512_storeu_epi32(&outputPointer[writeB], Boutb);
-						_mm512_storeu_epi32(&outputPointer[writeC], Coutb);
-						_mm512_storeu_epi32(&outputPointer[writeD], Doutb);
+						_mm512_storeu_ps(&outputPointer[writeA], Aoutb);
+						_mm512_storeu_ps(&outputPointer[writeB], Boutb);
+						_mm512_storeu_ps(&outputPointer[writeC], Coutb);
+						_mm512_storeu_ps(&outputPointer[writeD], Doutb);
 					}
 					else { //A
 						if (startA1 == endA1) {
-							Ab = _mm512_loadu_epi32(&inputPointer[startA2]);
+							Ab = _mm512_loadu_ps(&inputPointer[startA2]);
 							startA2 += 16;
 						}
 						else if (startA2 == endA2) {
-							Ab = _mm512_loadu_epi32(&inputPointer[startA1]);
+							Ab = _mm512_loadu_ps(&inputPointer[startA1]);
 							startA1 += 16;
 						}
 						else if (outputPointer[startA1+16] < outputPointer[startA2+16]) {
-							Ab = _mm512_loadu_epi32(&inputPointer[startA1]);
+							Ab = _mm512_loadu_ps(&inputPointer[startA1]);
 							startA1 += 16;
 						}
 						else {
-							Ab = _mm512_loadu_epi32(&inputPointer[startA2]);
+							Ab = _mm512_loadu_ps(&inputPointer[startA2]);
 							startA2 += 16;
 						}
 						//B
 						if (startB1 == endB1) {
-							Bb = _mm512_loadu_epi32(&inputPointer[startB2]);
+							Bb = _mm512_loadu_ps(&inputPointer[startB2]);
 							startB2 += 16;
 						}
 						else if (startB2 == endB2) {
-							Bb = _mm512_loadu_epi32(&inputPointer[startB1]);
+							Bb = _mm512_loadu_ps(&inputPointer[startB1]);
 							startB1 += 16;
 						}
 						else if (outputPointer[startB1 + 16] < outputPointer[startB2 + 16]) {
-							Bb = _mm512_loadu_epi32(&inputPointer[startB1]);
+							Bb = _mm512_loadu_ps(&inputPointer[startB1]);
 							startB1 += 16;
 						}
 						else {
-							Bb = _mm512_loadu_epi32(&inputPointer[startB2]);
+							Bb = _mm512_loadu_ps(&inputPointer[startB2]);
 							startB2 += 16;
 						}
 						//C
 						if (startC1 == endC1) {
-							Cb = _mm512_loadu_epi32(&inputPointer[startC2]);
+							Cb = _mm512_loadu_ps(&inputPointer[startC2]);
 							startC2 += 16;
 						}
 						else if (startC2 == endC2) {
-							Cb = _mm512_loadu_epi32(&inputPointer[startC1]);
+							Cb = _mm512_loadu_ps(&inputPointer[startC1]);
 							startC1 += 16;
 						}
 						else if (outputPointer[startC1 + 16] < outputPointer[startC2 + 16]) {
-							Cb = _mm512_loadu_epi32(&inputPointer[startC1]);
+							Cb = _mm512_loadu_ps(&inputPointer[startC1]);
 							startC1 += 16;
 						}
 						else {
-							Cb = _mm512_loadu_epi32(&inputPointer[startC2]);
+							Cb = _mm512_loadu_ps(&inputPointer[startC2]);
 							startC2 += 16;
 						}
 						//D
 						if (startD1 == endD1) {
-							Db = _mm512_loadu_epi32(&inputPointer[startD2]);
+							Db = _mm512_loadu_ps(&inputPointer[startD2]);
 							startD2 += 16;
 						}
 						else if (startD2 == endD2) {
-							Db = _mm512_loadu_epi32(&inputPointer[startD1]);
+							Db = _mm512_loadu_ps(&inputPointer[startD1]);
 							startD1 += 16;
 						}
 						else if (outputPointer[startD1 + 16] < outputPointer[startD2 + 16]) {
-							Db = _mm512_loadu_epi32(&inputPointer[startD1]);
+							Db = _mm512_loadu_ps(&inputPointer[startD1]);
 							startD1 += 16;
 						}
 						else {
-							Db = _mm512_loadu_epi32(&inputPointer[startD2]);
+							Db = _mm512_loadu_ps(&inputPointer[startD2]);
 							startD2 += 16;
 						}
 					}
 				}
-				int* temp = outputPointer;
+				float* temp = outputPointer;
 				outputPointer = inputPointer;
 				inputPointer = temp;
 
