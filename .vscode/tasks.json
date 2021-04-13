@@ -11,6 +11,7 @@
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "-mavx512f",
                 "-mavx2",
+                "-fopenmp",
             ],
             "options": {
                 "cwd": "${workspaceFolder}"

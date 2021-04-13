@@ -7,56 +7,61 @@
 #include <cstdlib>
 #include <omp.h>
 #include <cstdio>
+#include <chrono>
 #define N 33'554'432 // 2^25
 
 using namespace std;
 
 int main()
 {
-	float* megaArray = new float[N];
-	float* megaOut = new float[N];
+	float *megaArray = new float[N];
+	float *megaOut = new float[N];
 
 	fillArray(megaArray);
 
-	printf("Its running");
+	bubbleSort(megaArray);
+
+	for (int x = 0; x < 150; x++)
+	{
+		printf("w: %d, megaOut: %.0f\n",x, megaArray[x]);
+	}
+	
+	auto start = std::chrono::high_resolution_clock::now();
 
 	// openMP thread dynamic scheduler with for loop {
 	//#pragma omp parallel for schedual(dynamic) num_threads(64)
-	for (unsigned int i = 0; i < N; i+= 65536) {
+	for (int i = 0; i < N; i += 65536)
+	{
 		//printf("Thread %d is ready to work within range [%d, %d).\n", omp_get_thread_num(), i, (i + 65536));
 
-
-		int startIndex = i; // determine the start index of this block of 65536 elements
+		int startIndex = i;			// determine the start index of this block of 65536 elements
 		int endIndex = (i + 65536); // determine the end index of this block of 65536 elements
 
-		for (int sort = startIndex; sort < endIndex; sort += 16) {
-			selectionSort(megaArray, sort);
-		}
-		
 
 		int sortedBlockSize = 16;
-		int edingSortedBlockSize = 16384;
+		int edingSortedBlockSize = 32;//16384;
 
 		__m512 Aa, Ab, Ba, Bb, Ca, Cb, Da, Db;
 		__m512 Aouta, Aoutb, Bouta, Boutb, Couta, Coutb, Douta, Doutb;
 
-		float* inputPointer = megaArray;
-		float* outputPointer = megaOut;
+		float *inputPointer = megaArray;
+		float *outputPointer = megaOut;
 
-		while (sortedBlockSize <= edingSortedBlockSize) {
+		while (sortedBlockSize < edingSortedBlockSize)
+		{
 			//sortedBlockSize starts at 16 and is doubled every while loop iteration until it reaches 16384
 
-			for (int arrIndex = startIndex; arrIndex < endIndex; arrIndex += sortedBlockSize * 8) {
+			for (int arrIndex = startIndex; arrIndex < endIndex; arrIndex += sortedBlockSize * 8)
+			{
 
 				int startA1 = arrIndex;
-				int startA2 = arrIndex + sortedBlockSize +1;
-				int startB1 = arrIndex + (2 * sortedBlockSize) +1;
-				int startB2 = arrIndex + (3 * sortedBlockSize) + 1;
-				int startC1 = arrIndex + (4 * sortedBlockSize) + 1;
-				int startC2 = arrIndex + (5 * sortedBlockSize) + 1;
-				int startD1 = arrIndex + (6 * sortedBlockSize) + 1;
-				int startD2 = arrIndex + (7 * sortedBlockSize) + 1;
-
+				int startA2 = arrIndex + sortedBlockSize;
+				int startB1 = arrIndex + (2 * sortedBlockSize);
+				int startB2 = arrIndex + (3 * sortedBlockSize);
+				int startC1 = arrIndex + (4 * sortedBlockSize);
+				int startC2 = arrIndex + (5 * sortedBlockSize);
+				int startD1 = arrIndex + (6 * sortedBlockSize);
+				int startD2 = arrIndex + (7 * sortedBlockSize);
 
 				int endA1 = arrIndex + sortedBlockSize;
 				int endA2 = arrIndex + (2 * sortedBlockSize);
@@ -75,15 +80,24 @@ int main()
 				Cb = _mm512_loadu_ps(&inputPointer[startC2]);
 				Da = _mm512_loadu_ps(&inputPointer[startD1]);
 				Db = _mm512_loadu_ps(&inputPointer[startD2]);
-				
 
 				int writeA = startA1;
 				int writeB = startB1;
 				int writeC = startC1;
 				int writeD = startD1;
 
-				for (int j = 0; j < (sortedBlockSize / 8)-1; j++) {
-					
+				startA1 += 16;
+				startA2 += 16;
+				startB1 += 16;
+				startB2 += 16;
+				startC1 += 16;
+				startC2 += 16;
+				startD1 += 16;
+				startD2 += 16;
+
+				for (int j = 0; j < (sortedBlockSize / 8) - 1; j++)
+				{
+
 					bitonicSort(Aa, Ab, Ba, Bb, Ca, Cb, Da, Db, Aouta, Aoutb, Bouta, Boutb, Couta, Coutb, Douta, Doutb);
 
 					_mm512_storeu_ps(&outputPointer[writeA], Aouta);
@@ -91,7 +105,8 @@ int main()
 					_mm512_storeu_ps(&outputPointer[writeC], Couta);
 					_mm512_storeu_ps(&outputPointer[writeD], Douta);
 
-					
+					// for(int i = 0; i < )
+
 					writeA += 16;
 					writeB += 16;
 					writeC += 16;
@@ -102,101 +117,126 @@ int main()
 					Ca = Coutb;
 					Da = Doutb;
 
-
-					if (j == (sortedBlockSize / 8) - 2) {
+					if (j == (sortedBlockSize / 8) - 2)
+					{
 						_mm512_storeu_ps(&outputPointer[writeA], Aoutb);
 						_mm512_storeu_ps(&outputPointer[writeB], Boutb);
 						_mm512_storeu_ps(&outputPointer[writeC], Coutb);
 						_mm512_storeu_ps(&outputPointer[writeD], Doutb);
 					}
-					else { //A
-						if (startA1 == endA1) {
+					else
+					{ //A
+						if (startA1 == endA1)
+						{
 							Ab = _mm512_loadu_ps(&inputPointer[startA2]);
 							startA2 += 16;
 						}
-						else if (startA2 == endA2) {
+						else if (startA2 == endA2)
+						{
 							Ab = _mm512_loadu_ps(&inputPointer[startA1]);
 							startA1 += 16;
 						}
-						else if (outputPointer[startA1+16] < outputPointer[startA2+16]) {
+						else if (inputPointer[startA1] < inputPointer[startA2])
+						{
 							Ab = _mm512_loadu_ps(&inputPointer[startA1]);
 							startA1 += 16;
 						}
-						else {
+						else
+						{
 							Ab = _mm512_loadu_ps(&inputPointer[startA2]);
 							startA2 += 16;
 						}
 						//B
-						if (startB1 == endB1) {
+						if (startB1 == endB1)
+						{
 							Bb = _mm512_loadu_ps(&inputPointer[startB2]);
 							startB2 += 16;
 						}
-						else if (startB2 == endB2) {
+						else if (startB2 == endB2)
+						{
 							Bb = _mm512_loadu_ps(&inputPointer[startB1]);
 							startB1 += 16;
 						}
-						else if (outputPointer[startB1 + 16] < outputPointer[startB2 + 16]) {
+						else if (inputPointer[startB1 + 16] < inputPointer[startB2 + 16])
+						{
 							Bb = _mm512_loadu_ps(&inputPointer[startB1]);
 							startB1 += 16;
 						}
-						else {
+						else
+						{
 							Bb = _mm512_loadu_ps(&inputPointer[startB2]);
 							startB2 += 16;
 						}
 						//C
-						if (startC1 == endC1) {
+						if (startC1 == endC1)
+						{
 							Cb = _mm512_loadu_ps(&inputPointer[startC2]);
 							startC2 += 16;
 						}
-						else if (startC2 == endC2) {
+						else if (startC2 == endC2)
+						{
 							Cb = _mm512_loadu_ps(&inputPointer[startC1]);
 							startC1 += 16;
 						}
-						else if (outputPointer[startC1 + 16] < outputPointer[startC2 + 16]) {
+						else if (inputPointer[startC1 + 16] < inputPointer[startC2 + 16])
+						{
 							Cb = _mm512_loadu_ps(&inputPointer[startC1]);
 							startC1 += 16;
 						}
-						else {
+						else
+						{
 							Cb = _mm512_loadu_ps(&inputPointer[startC2]);
 							startC2 += 16;
 						}
 						//D
-						if (startD1 == endD1) {
+						if (startD1 == endD1)
+						{
 							Db = _mm512_loadu_ps(&inputPointer[startD2]);
 							startD2 += 16;
 						}
-						else if (startD2 == endD2) {
+						else if (startD2 == endD2)
+						{
 							Db = _mm512_loadu_ps(&inputPointer[startD1]);
 							startD1 += 16;
 						}
-						else if (outputPointer[startD1 + 16] < outputPointer[startD2 + 16]) {
+						else if (inputPointer[startD1 + 16] < inputPointer[startD2 + 16])
+						{
 							Db = _mm512_loadu_ps(&inputPointer[startD1]);
 							startD1 += 16;
 						}
-						else {
+						else
+						{
 							Db = _mm512_loadu_ps(&inputPointer[startD2]);
 							startD2 += 16;
 						}
 					}
 				}
-				float* temp = outputPointer;
+				float *temp = outputPointer;
 				outputPointer = inputPointer;
 				inputPointer = temp;
 
 				sortedBlockSize *= 2;
-				//exchange input and output pointers, 
-
+				
+				//exchange input and output pointers,
 			}
-			//deallocate output array
-			delete[] outputPointer;
-			delete[] inputPointer;
-		}// End OpenMP for loop
+
+		} // End OpenMP for loop
+		  //deallocate output array
+		
 	}
 
-	
-	for(int x = 0; x < 150; x++){
-		printf("%.0f\n", megaOut[x]);
+	auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double, std::milli> running_time = end - start;
+
+	printf("Time: %f \n", running_time.count());
+
+	for (int x = 0; x < 150; x++)
+	{
+		printf("x: %d, megaOut: %.0f\n",x, megaOut[x]);
 	}
+
+	// delete[] megaArray;
+	// delete[] megaOut;
 
 	return 0;
 }

@@ -6,47 +6,73 @@
 #include <iostream>
 #include <immintrin.h>
 #include <random>
+#include <omp.h>
 #define N 33'554'432 // 2^25
 
-
-void selectionSort(float* newArr) {
+void selectionSort(float *newArr)
+{
 	int tempStorage, iterator;
 
-	for (int i = 0; i < 15; i++) {
+	for (int i = 0; i < 15; i++)
+	{
 		iterator = i;
-		for (int j = i + 1; j < 16; j++) {
-			if (newArr[j] < newArr[iterator]) {
+		for (int j = i + 1; j < 16; j++)
+		{
+			if (newArr[j] < newArr[iterator])
+			{
 				iterator = j;
 			}
-
 		}
-		
+
 		//swap values
 		tempStorage = newArr[iterator];
 		newArr[iterator] = newArr[i];
 		newArr[i] = tempStorage;
-
 	}
 }
 
-void selectionSort(float* newArr, int startIndex) {
-	int tempStorage, iterator;
+void selectionSort(float *newArr, int startIndex)
+{
+	int iterator;
+	float tempStorage;
 
-	for (int i = startIndex; i < 15 + startIndex; i++) {
-		iterator = i;
-		for (int j = i + 1; j < 16; j++) {
-			if (newArr[j] < newArr[iterator]) {
-				iterator = j;
+	int i, j, smallest;
+	for (i = startIndex; i < 15 + startIndex; i++)
+	{
+		smallest = i; 
+		for (j = i + 1; j < 16 + startIndex; j++)
+		{
+			
+			float sma =  newArr[smallest];
+			float jj = newArr[j];
+
+			if (newArr[j] < newArr[smallest])
+			{
+				smallest = j;
+
+				float temp;
+				temp = newArr[i];
+				newArr[i] = newArr[smallest];
+				newArr[smallest] = temp;
 			}
-
 		}
-
-		//swap values
-		tempStorage = newArr[iterator];
-		newArr[iterator] = newArr[i];
-		newArr[i] = tempStorage;
-
 	}
+}
+
+void bubbleSort(float* mainArray){
+
+	#pragma omp parallel for
+	for (int unit = 0; unit < N; unit += 16) {
+        for (int i = unit; i < unit + 16; i++) {
+            for(int j = unit + 1; j < unit + 16; j++) {
+                if (mainArray[j] < mainArray[j-1]) {
+                    float temp = mainArray[j];
+                    mainArray[j] = mainArray[j-1];
+                    mainArray[j-1] = temp;
+                }
+            }
+        }
+    }
 }
 
 //65536
@@ -63,46 +89,46 @@ void selectionSort(float* newArr, int startIndex) {
 // 		first = _mm512_max_epi32(first, second);
 // 	}
 
-	
-
 // 	return first;
 // }
 
-
-void fillArray(int* big) {
+void fillArray(int *big)
+{
 	//-2,147,483,647
 	//2147483647
 
 	std::default_random_engine generator;
 	std::uniform_int_distribution<int> distribution(-2147483647, 2147483647);
 
-	for (unsigned int i = 0; i < N; i++) {
+	for (unsigned int i = 0; i < N; i++)
+	{
 		big[i] = distribution(generator);
 	}
 }
 
-
-void fillArray(float* big) {//overrides incase I switch to floats
+void fillArray(float *big)
+{ //overrides incase I switch to floats
 
 	std::default_random_engine generator;
-	std::uniform_int_distribution<int> distribution(-2147483647, 2147483647);
+	std::uniform_int_distribution<int> distribution(1, 1744483647);
 
-	for (unsigned int i = 0; i < N; i++) {
+	for (unsigned int i = 0; i < N; i++)
+	{
 		big[i] = (float)distribution(generator);
 	}
 }
 
-
-void bitonicSort(const __m512& Aa, const __m512& Ab, const __m512& Ba, const __m512& Bb, const __m512& Ca, const __m512& Cb, const __m512& Da, const __m512& Db,
-	__m512& Aouta, __m512& Aoutb, __m512& Bouta, __m512& Boutb, __m512& Couta, __m512& Coutb, __m512& Douta, __m512& Doutb) {
+void bitonicSort(const __m512 &Aa, const __m512 &Ab, const __m512 &Ba, const __m512 &Bb, const __m512 &Ca, const __m512 &Cb, const __m512 &Da, const __m512 &Db,
+				 __m512 &Aouta, __m512 &Aoutb, __m512 &Bouta, __m512 &Boutb, __m512 &Couta, __m512 &Coutb, __m512 &Douta, __m512 &Doutb)
+{
 
 	//revers B
 	Aoutb = _mm512_permutexvar_ps(_mm512_set_epi32(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15), Ab);
 	Boutb = _mm512_permutexvar_ps(_mm512_set_epi32(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15), Bb);
 	Coutb = _mm512_permutexvar_ps(_mm512_set_epi32(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15), Cb);
 	Doutb = _mm512_permutexvar_ps(_mm512_set_epi32(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15), Db);
-	
-	// L1 
+
+	// L1
 	__m512 L1 = _mm512_min_ps(Aa, Aoutb);
 	__m512 L2 = _mm512_min_ps(Ba, Boutb);
 	__m512 L3 = _mm512_min_ps(Ca, Coutb);
@@ -113,7 +139,7 @@ void bitonicSort(const __m512& Aa, const __m512& Ab, const __m512& Ba, const __m
 	__m512 H3 = _mm512_max_ps(Ca, Coutb);
 	__m512 H4 = _mm512_max_ps(Da, Doutb);
 
-	Aouta = _mm512_permutex2var_ps(L1, _mm512_set_epi32(23, 22, 21, 20, 19, 18, 17, 16, 7,6,5,4,3,2,1, 0), H1);
+	Aouta = _mm512_permutex2var_ps(L1, _mm512_set_epi32(23, 22, 21, 20, 19, 18, 17, 16, 7, 6, 5, 4, 3, 2, 1, 0), H1);
 	Bouta = _mm512_permutex2var_ps(L2, _mm512_set_epi32(23, 22, 21, 20, 19, 18, 17, 16, 7, 6, 5, 4, 3, 2, 1, 0), H2);
 	Couta = _mm512_permutex2var_ps(L3, _mm512_set_epi32(23, 22, 21, 20, 19, 18, 17, 16, 7, 6, 5, 4, 3, 2, 1, 0), H3);
 	Douta = _mm512_permutex2var_ps(L4, _mm512_set_epi32(23, 22, 21, 20, 19, 18, 17, 16, 7, 6, 5, 4, 3, 2, 1, 0), H4);
@@ -122,8 +148,6 @@ void bitonicSort(const __m512& Aa, const __m512& Ab, const __m512& Ba, const __m
 	Boutb = _mm512_permutex2var_ps(L2, _mm512_set_epi32(31, 30, 29, 28, 27, 26, 25, 24, 15, 14, 13, 12, 11, 10, 9, 8), H2);
 	Coutb = _mm512_permutex2var_ps(L3, _mm512_set_epi32(31, 30, 29, 28, 27, 26, 25, 24, 15, 14, 13, 12, 11, 10, 9, 8), H3);
 	Doutb = _mm512_permutex2var_ps(L4, _mm512_set_epi32(31, 30, 29, 28, 27, 26, 25, 24, 15, 14, 13, 12, 11, 10, 9, 8), H4);
-
-
 
 	//L2 to L3
 	L1 = _mm512_min_ps(Aouta, Aoutb);
@@ -146,7 +170,6 @@ void bitonicSort(const __m512& Aa, const __m512& Ab, const __m512& Ba, const __m
 	Coutb = _mm512_permutex2var_ps(L3, _mm512_set_epi32(31, 30, 29, 28, 15, 14, 13, 12, 23, 22, 21, 20, 7, 6, 5, 4), H3);
 	Doutb = _mm512_permutex2var_ps(L4, _mm512_set_epi32(31, 30, 29, 28, 15, 14, 13, 12, 23, 22, 21, 20, 7, 6, 5, 4), H4);
 
-
 	//L3 to L4
 	L1 = _mm512_min_ps(Aouta, Aoutb);
 	L2 = _mm512_min_ps(Bouta, Boutb);
@@ -158,7 +181,6 @@ void bitonicSort(const __m512& Aa, const __m512& Ab, const __m512& Ba, const __m
 	H3 = _mm512_max_ps(Couta, Coutb);
 	H4 = _mm512_max_ps(Douta, Doutb);
 
-
 	Aouta = _mm512_permutex2var_ps(L1, _mm512_set_epi32(29, 28, 13, 12, 25, 24, 9, 8, 21, 20, 5, 4, 17, 16, 1, 0), H1);
 	Bouta = _mm512_permutex2var_ps(L2, _mm512_set_epi32(29, 28, 13, 12, 25, 24, 9, 8, 21, 20, 5, 4, 17, 16, 1, 0), H2);
 	Couta = _mm512_permutex2var_ps(L3, _mm512_set_epi32(29, 28, 13, 12, 25, 24, 9, 8, 21, 20, 5, 4, 17, 16, 1, 0), H3);
@@ -168,7 +190,6 @@ void bitonicSort(const __m512& Aa, const __m512& Ab, const __m512& Ba, const __m
 	Boutb = _mm512_permutex2var_ps(L2, _mm512_set_epi32(31, 30, 15, 14, 27, 26, 11, 10, 23, 22, 7, 6, 19, 18, 3, 2), H2);
 	Coutb = _mm512_permutex2var_ps(L3, _mm512_set_epi32(31, 30, 15, 14, 27, 26, 11, 10, 23, 22, 7, 6, 19, 18, 3, 2), H3);
 	Doutb = _mm512_permutex2var_ps(L4, _mm512_set_epi32(31, 30, 15, 14, 27, 26, 11, 10, 23, 22, 7, 6, 19, 18, 3, 2), H4);
-
 
 	//L4 to L5
 	L1 = _mm512_min_ps(Aouta, Aoutb);
@@ -211,9 +232,7 @@ void bitonicSort(const __m512& Aa, const __m512& Ab, const __m512& Ba, const __m
 	Boutb = _mm512_permutex2var_ps(L2, _mm512_set_epi32(31, 15, 30, 14, 29, 13, 28, 12, 27, 11, 26, 10, 25, 9, 24, 8), H2);
 	Coutb = _mm512_permutex2var_ps(L3, _mm512_set_epi32(31, 15, 30, 14, 29, 13, 28, 12, 27, 11, 26, 10, 25, 9, 24, 8), H3);
 	Doutb = _mm512_permutex2var_ps(L4, _mm512_set_epi32(31, 15, 30, 14, 29, 13, 28, 12, 27, 11, 26, 10, 25, 9, 24, 8), H4);
-
 }
-
 
 // void printVectorInt(__m512i v, string name)
 // {
