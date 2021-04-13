@@ -31,66 +31,55 @@ void selectionSort(float *newArr)
 	}
 }
 
+//Does not work
 void selectionSort(float *newArr, int startIndex)
 {
-	int iterator;
-	float tempStorage;
+	int iterator;//Does not work
+	float tempStorage;//Does not work
 
-	int i, j, smallest;
-	for (i = startIndex; i < 15 + startIndex; i++)
+	int i, j, smallest;//Does not work
+	for (i = startIndex; i < 15 + startIndex; i++)//Does not work
 	{
-		smallest = i; 
-		for (j = i + 1; j < 16 + startIndex; j++)
+		smallest = i;//Does not work
+		for (j = i + 1; j < 16 + startIndex; j++)//Does not work
 		{
-			
-			float sma =  newArr[smallest];
-			float jj = newArr[j];
 
-			if (newArr[j] < newArr[smallest])
+			float sma = newArr[smallest];//Does not work
+			float jj = newArr[j];
+//Does not work
+			if (newArr[j] < newArr[smallest])//Does not work
 			{
-				smallest = j;
+				smallest = j;//Does not work
 
 				float temp;
-				temp = newArr[i];
-				newArr[i] = newArr[smallest];
-				newArr[smallest] = temp;
+				temp = newArr[i];//Does not work
+				newArr[i] = newArr[smallest];//Does not work
+				newArr[smallest] = temp;//Does not work
 			}
 		}
 	}
 }
 
-void bubbleSort(float* mainArray){
+void bubbleSort(float *mainArray)
+{
 
-	#pragma omp parallel for
-	for (int unit = 0; unit < N; unit += 16) {
-        for (int i = unit; i < unit + 16; i++) {
-            for(int j = unit + 1; j < unit + 16; j++) {
-                if (mainArray[j] < mainArray[j-1]) {
-                    float temp = mainArray[j];
-                    mainArray[j] = mainArray[j-1];
-                    mainArray[j-1] = temp;
-                }
-            }
-        }
-    }
+#pragma omp parallel for schedule(dynamic) num_threads(64)
+	for (int unit = 0; unit < N; unit += 16)
+	{
+		for (int i = unit; i < unit + 16; i++)
+		{
+			for (int j = unit + 1; j < unit + 16; j++)
+			{
+				if (mainArray[j] < mainArray[j - 1])
+				{
+					float temp = mainArray[j];
+					mainArray[j] = mainArray[j - 1];
+					mainArray[j - 1] = temp;
+				}
+			}
+		}
+	}
 }
-
-//65536
-// __m512i m512_generator(int* a) {
-// 	const int maxIntValue = 4294967296;
-// 	int max = 10000000;
-
-// 	std::default_random_engine generator;
-// 	std::uniform_int_distribution<int> distrobution(0, maxIntValue);
-
-// 	__m512i first = _mm512_load_si512(&a[0]); // Go get the first vector
-// 	for (int i = 16; i < max; i += 16) {
-// 		__m512i second = _mm512_load_si512(&a[i]); // Get the next vector
-// 		first = _mm512_max_epi32(first, second);
-// 	}
-
-// 	return first;
-// }
 
 void fillArray(int *big)
 {
@@ -112,10 +101,35 @@ void fillArray(float *big)
 	std::default_random_engine generator;
 	std::uniform_int_distribution<int> distribution(1, 1744483647);
 
-	for (unsigned int i = 0; i < N; i++)
+#pragma omp parallel for schedule(dynamic) num_threads(64)
+	for (unsigned int spacer = 0; spacer < N; spacer += 16384)
 	{
-		big[i] = (float)distribution(generator);
+		for (unsigned int i = spacer; i < spacer+16384; i++)
+		{
+			big[i] = (float)distribution(generator);
+		}
 	}
+}
+
+bool validator(float *bigData)
+{
+	bool validated = true;
+
+#pragma omp parallel for schedule(dynamic) num_threads(64)
+	for (unsigned int k = 0; k < N; k += 16384)
+	{
+		for (unsigned int i = k; i < k + 16384; i++)
+		{
+
+			if (bigData[i] > bigData[i + 1] && (i + 1) % 16384 != 0)
+			{
+
+				validated = false;
+				//printf("%.0f, %.0f\n", bigData[i],bigData[i+1]);
+			}
+		}
+	}
+	return validated;
 }
 
 void bitonicSort(const __m512 &Aa, const __m512 &Ab, const __m512 &Ba, const __m512 &Bb, const __m512 &Ca, const __m512 &Cb, const __m512 &Da, const __m512 &Db,
@@ -233,44 +247,3 @@ void bitonicSort(const __m512 &Aa, const __m512 &Ab, const __m512 &Ba, const __m
 	Coutb = _mm512_permutex2var_ps(L3, _mm512_set_epi32(31, 15, 30, 14, 29, 13, 28, 12, 27, 11, 26, 10, 25, 9, 24, 8), H3);
 	Doutb = _mm512_permutex2var_ps(L4, _mm512_set_epi32(31, 15, 30, 14, 29, 13, 28, 12, 27, 11, 26, 10, 25, 9, 24, 8), H4);
 }
-
-// void printVectorInt(__m512i v, string name)
-// {
-// #if defined (__GNUC__)
-// 	int* temp = (int*)aligned_alloc(64, sizeof(int) * 16);
-// #elif defined (_MSC_VER)
-// 	int* temp = (int*)_aligned_malloc(sizeof(int) * 16, 64);
-// #endif
-// 	_mm512_store_si512(temp, v);
-// 	printf("The vector called %s contains: ", name.c_str());
-// 	for (int i = 0; i < 16; i++)
-// 	{
-// 		printf("%02d ", temp[i]);
-// 	}
-// 	printf("\n");
-// #if defined (__GNUC__)
-// 	free(temp);
-// #elif defined (_MSC_VER)
-// 	_aligned_free(temp);
-// #endif
-// }
-// void printVectorFloat(__m512 v, string name)
-// {
-// #if defined (__GNUC__)
-// 	float* temp = (float*)aligned_alloc(64, sizeof(float) * 16);
-// #elif defined (_MSC_VER)
-// 	float* temp = (float*)_aligned_malloc(sizeof(float) * 16, 64);
-// #endif
-// 	_mm512_store_ps(temp, v);
-// 	printf("The vector called %s contains: ", name.c_str());
-// 	for (int i = 0; i < 16; i++)
-// 	{
-// 		printf("%3f ", temp[i]);
-// 	}
-// 	printf("\n");
-// #if defined (__GNUC__)
-// 	free(temp);
-// #elif defined (_MSC_VER)
-// 	_aligned_free(temp);
-// #endif
-// }

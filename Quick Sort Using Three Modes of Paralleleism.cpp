@@ -16,20 +16,13 @@ int main()
 {
 	float *megaArray = new float[N];
 	float *megaOut = new float[N];
-
 	fillArray(megaArray);
-
 	bubbleSort(megaArray);
 
-	for (int x = 0; x < 150; x++)
-	{
-		printf("w: %d, megaOut: %.0f\n",x, megaArray[x]);
-	}
-	
 	auto start = std::chrono::high_resolution_clock::now();
 
-	// openMP thread dynamic scheduler with for loop {
-	//#pragma omp parallel for schedual(dynamic) num_threads(64)
+// openMP thread dynamic scheduler with for loop {
+#pragma omp parallel for schedule(dynamic) num_threads(64)
 	for (int i = 0; i < N; i += 65536)
 	{
 		//printf("Thread %d is ready to work within range [%d, %d).\n", omp_get_thread_num(), i, (i + 65536));
@@ -37,9 +30,8 @@ int main()
 		int startIndex = i;			// determine the start index of this block of 65536 elements
 		int endIndex = (i + 65536); // determine the end index of this block of 65536 elements
 
-
 		int sortedBlockSize = 16;
-		int edingSortedBlockSize = 32;//16384;
+		int edingSortedBlockSize = 16384;
 
 		__m512 Aa, Ab, Ba, Bb, Ca, Cb, Da, Db;
 		__m512 Aouta, Aoutb, Bouta, Boutb, Couta, Coutb, Douta, Doutb;
@@ -157,7 +149,7 @@ int main()
 							Bb = _mm512_loadu_ps(&inputPointer[startB1]);
 							startB1 += 16;
 						}
-						else if (inputPointer[startB1 + 16] < inputPointer[startB2 + 16])
+						else if (inputPointer[startB1] < inputPointer[startB2])
 						{
 							Bb = _mm512_loadu_ps(&inputPointer[startB1]);
 							startB1 += 16;
@@ -178,7 +170,7 @@ int main()
 							Cb = _mm512_loadu_ps(&inputPointer[startC1]);
 							startC1 += 16;
 						}
-						else if (inputPointer[startC1 + 16] < inputPointer[startC2 + 16])
+						else if (inputPointer[startC1] < inputPointer[startC2])
 						{
 							Cb = _mm512_loadu_ps(&inputPointer[startC1]);
 							startC1 += 16;
@@ -199,7 +191,7 @@ int main()
 							Db = _mm512_loadu_ps(&inputPointer[startD1]);
 							startD1 += 16;
 						}
-						else if (inputPointer[startD1 + 16] < inputPointer[startD2 + 16])
+						else if (inputPointer[startD1 ] < inputPointer[startD2 ])
 						{
 							Db = _mm512_loadu_ps(&inputPointer[startD1]);
 							startD1 += 16;
@@ -211,32 +203,35 @@ int main()
 						}
 					}
 				}
-				float *temp = outputPointer;
-				outputPointer = inputPointer;
-				inputPointer = temp;
 
-				sortedBlockSize *= 2;
-				
 				//exchange input and output pointers,
 			}
+			float *temp = outputPointer;
+			outputPointer = inputPointer;
+			inputPointer = temp;
 
+			sortedBlockSize *= 2;
 		} // End OpenMP for loop
 		  //deallocate output array
-		
 	}
 
 	auto end = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double, std::milli> running_time = end - start;
+	std::chrono::duration<double, std::milli> running_time = end - start;
 
 	printf("Time: %f \n", running_time.count());
 
-	for (int x = 0; x < 150; x++)
+	if (validator(megaArray))
 	{
-		printf("x: %d, megaOut: %.0f\n",x, megaOut[x]);
+		printf("Validated!\n\n");
+	}
+	else
+	{
+		printf("failed!\n\n");
+		printf("%.0f, %.0f, %.0f, %.0f \n", megaArray[16382], megaArray[16383],megaArray[16384], megaArray[16385]);
 	}
 
-	// delete[] megaArray;
-	// delete[] megaOut;
+	delete[] megaArray;
+	delete[] megaOut;
 
 	return 0;
 }
